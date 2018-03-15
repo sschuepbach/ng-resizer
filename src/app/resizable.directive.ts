@@ -7,8 +7,13 @@ export class ResizableDirective implements OnInit {
   @Input() resizableOnRight = true;
   @Input() resizableOnTop = true;
   @Input() resizableOnBottom = true;
-  @Output() width = new EventEmitter<string>();
-  @Output() height = new EventEmitter<string>();
+
+  @Output() width = new EventEmitter<number>();
+  @Output() height = new EventEmitter<number>();
+  @Output() left = new EventEmitter<number>();
+  @Output() top = new EventEmitter<number>();
+  @Output() resizing = new EventEmitter<boolean>();
+
   private ne: any;
   private boundarySize = 8;
 
@@ -32,8 +37,8 @@ export class ResizableDirective implements OnInit {
   ngOnInit() {
     this.renderer.setStyle(this.ne, 'height', '50px');
     this.renderer.setStyle(this.ne, 'width', '30%');
-    this.width.next(this.ne.offsetWidth + 'px');
-    this.height.next(this.ne.offsetHeight + 'px');
+    this.width.next(this.ne.offsetWidth);
+    this.height.next(this.ne.offsetHeight);
     this.createOverlay();
   }
 
@@ -64,6 +69,7 @@ export class ResizableDirective implements OnInit {
     if (this.isInsideBoundary(event)) {
       this.makeElementTransparent();
       this.enableOverlay();
+      this.resizing.emit(true);
     }
   }
 
@@ -72,6 +78,7 @@ export class ResizableDirective implements OnInit {
     this.makeElementOpaque();
     this.disableOverlay();
     this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
+    this.resizing.emit(false);
   }
 
   private makeElementTransparent() {
@@ -152,31 +159,39 @@ export class ResizableDirective implements OnInit {
     this.elemWidthOnStart = this.ne.offsetWidth;
   }
 
-  private resizeTop(event): string {
-    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart) + 'px';
-    const currentHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart) + 'px';
-    this.renderer.setStyle(this.ne, 'top', currentTop);
-    this.renderer.setStyle(this.ne, 'height', currentHeight);
+  private resizeTop(event): number {
+    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
+    const tempHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart);
+    const currentHeight = tempHeight > 0 ? tempHeight : 0;
+    if (tempHeight >= 0) {
+      this.renderer.setStyle(this.ne, 'top', currentTop + 'px');
+    }
+    this.renderer.setStyle(this.ne, 'height', currentHeight + 'px');
     return currentHeight;
   }
 
-  private resizeRight(event): string {
-    const currentWidth = this.elemWidthOnStart + (event.clientX - this.mouseXOnStart) + 'px';
-    this.renderer.setStyle(this.ne, 'width', currentWidth);
+  private resizeRight(event): number {
+    const tempWidth = this.elemWidthOnStart + (event.clientX - this.mouseXOnStart);
+    const currentWidth = tempWidth > 0 ? tempWidth : 0;
+    this.renderer.setStyle(this.ne, 'width', currentWidth + 'px');
     return currentWidth;
   }
 
-  private resizeBottom(event): string {
-    const currentHeight = this.elemHeightOnStart + (event.clientY - this.mouseYOnStart) + 'px';
-    this.renderer.setStyle(this.ne, 'height', currentHeight);
+  private resizeBottom(event): number {
+    const tempHeight = this.elemHeightOnStart + (event.clientY - this.mouseYOnStart);
+    const currentHeight = tempHeight > 0 ? tempHeight : 0;
+    this.renderer.setStyle(this.ne, 'height', currentHeight + 'px');
     return currentHeight;
   }
 
-  private resizeLeft(event): string {
-    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart) + 'px';
-    const currentWidth = this.elemWidthOnStart - (event.clientX - this.mouseXOnStart) + 'px';
-    this.renderer.setStyle(this.ne, 'left', currentLeft);
-    this.renderer.setStyle(this.ne, 'width', currentWidth);
+  private resizeLeft(event): number {
+    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
+    const tempWidth = this.elemWidthOnStart - (event.clientX - this.mouseXOnStart);
+    const currentWidth = tempWidth > 0 ? tempWidth : 0;
+    if (tempWidth >= 0) {
+      this.renderer.setStyle(this.ne, 'left', currentLeft + 'px');
+    }
+    this.renderer.setStyle(this.ne, 'width', currentWidth + 'px');
     return currentWidth;
   }
 

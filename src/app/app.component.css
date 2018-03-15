@@ -1,13 +1,14 @@
-.adiv {
+div {
   position: absolute;
   display:flex;
   justify-content:center;
   align-items:center;
-  background-color: red;
-  border: 1px black solid;
+  background-color: #9addff;
+  border: 3px #c8c8c8 solid;
+  border-radius:5px;
   box-sizing: border-box;
 }
 
-.adiv * {
+div * {
   user-select: none;
 }

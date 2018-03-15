@@ -6,14 +6,19 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  width: string;
-  height: string;
+  width: number;
+  height: number;
+  resizing = false;
 
-  setWidth(width: string) {
+  setWidth(width: number) {
     this.width = width;
   }
 
-  setHeight(height: string) {
+  setHeight(height: number) {
     this.height = height;
+  }
+
+  setResizing(resizing: boolean) {
+    this.resizing = resizing;
   }
 }
