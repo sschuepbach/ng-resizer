@@ -37,12 +37,8 @@ export class ResizableDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.width.next(this.ne.offsetWidth);
-    this.height.next(this.ne.offsetHeight);
-    this.top.next(this.ne.getBoundingClientRect().top);
-    this.left.next(this.ne.getBoundingClientRect().left);
-    this.resizing.next(false);
-    this.dragging.next(false);
+    this.emitInitialValues();
+    this.applyInitialStylesToElement();
     this.createOverlay();
   }
 
@@ -91,8 +87,25 @@ export class ResizableDirective implements OnInit {
     this.dragging.emit(false);
   }
 
+  private emitInitialValues() {
+    this.width.next(this.ne.offsetWidth);
+    this.height.next(this.ne.offsetHeight);
+    this.top.next(this.ne.getBoundingClientRect().top);
+    this.left.next(this.ne.getBoundingClientRect().left);
+    this.resizing.next(false);
+    this.dragging.next(false);
+  }
+
+  private applyInitialStylesToElement() {
+    this.renderer.setStyle(this.ne, '-webkit-transition', 'opacity 0.2s ease-in-out');
+    this.renderer.setStyle(this.ne, '-moz-transition', 'opacity 0.2s ease-in-out');
+    this.renderer.setStyle(this.ne, '-ms-transition', 'opacity 0.2s ease-in-out');
+    this.renderer.setStyle(this.ne, '-o-transition', 'opacity 0.2s ease-in-out');
+    this.renderer.setStyle(this.ne, 'transition', 'opacity 0.2s ease-in-out');
+  }
+
   private makeElementTransparent() {
-    this.renderer.setStyle(this.ne, 'opacity', 0.5);
+    this.renderer.setStyle(this.ne, 'opacity', 0.2);
   }
 
   private makeElementOpaque() {
