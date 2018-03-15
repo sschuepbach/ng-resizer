@@ -6,5 +6,14 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  dim: [number, number];
+  width: string;
+  height: string;
+
+  setWidth(width: string) {
+    this.width = width;
+  }
+
+  setHeight(height: string) {
+    this.height = height;
+  }
 }

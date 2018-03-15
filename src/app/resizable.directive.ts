@@ -7,9 +7,21 @@ export class ResizableDirective implements OnInit {
   @Input() resizableOnRight = true;
   @Input() resizableOnTop = true;
   @Input() resizableOnBottom = true;
-  @Output() dim = new EventEmitter<[number, number]>();
+  @Output() width = new EventEmitter<string>();
+  @Output() height = new EventEmitter<string>();
   private ne: any;
   private boundarySize = 8;
+
+  private topIsResizable = false;
+  private rightIsResizable = false;
+  private bottomIsResizable = false;
+  private leftIsResizable = false;
+  private mouseXOnStart: number;
+  private mouseYOnStart: number;
+  private elemTopOnStart: number;
+  private elemWidthOnStart: number;
+  private elemHeightOnStart: number;
+  private elemLeftOnStart: number;
 
   constructor(private renderer: Renderer2, private el: ElementRef) {
     this.ne = el.nativeElement;
@@ -18,14 +30,120 @@ export class ResizableDirective implements OnInit {
   ngOnInit() {
     this.renderer.setStyle(this.ne, 'height', '50px');
     this.renderer.setStyle(this.ne, 'width', '30%');
-    this.dim.next([
-                    this.ne.offsetWidth,
-                    this.ne.offsetHeight
-                  ]);
+    this.width.next(this.ne.offsetWidth + 'px');
+    this.height.next(this.ne.offsetHeight + 'px');
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event) {
+    this.setResizeCursors(event);
+    if (this.topIsResizable) {
+      const currentHeight = this.resizeTop(event);
+      this.height.next(currentHeight);
+    }
+    if (this.rightIsResizable) {
+      const currentWidth = this.resizeRight(event);
+      this.width.next(currentWidth);
+    }
+    if (this.bottomIsResizable) {
+      const currentHeight = this.resizeBottom(event);
+      this.height.next(currentHeight);
+    }
+    if (this.leftIsResizable) {
+      const currentWidth = this.resizeLeft(event);
+      this.width.next(currentWidth);
+    }
+  }
+
+  @HostListener('mousedown', ['$event'])
+  onMouseDown(event) {
+    this.setResizeMode(event);
+  }
+
+  @HostListener('mouseup')
+  onMouseUp() {
+    this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
+  }
+
+  private setResizeMode(event) {
+    if (this.isInsideTopRightBoundary(event)) {
+      this.makeTopResizable(event);
+      this.makeRightResizable(event);
+    } else if (this.isInsideBottomRightBoundary(event)) {
+      this.makeBottomResizable(event);
+      this.makeRightResizable(event);
+    } else if (this.isInsideBottomLeftBoundary(event)) {
+      this.makeBottomResizable(event);
+      this.makeLeftResizable(event);
+    } else if (this.isInsideTopLeftBoundary(event)) {
+      this.makeTopResizable(event);
+      this.makeLeftResizable(event);
+    } else if (this.isInsideTopBoundary(event)) {
+      this.makeTopResizable(event);
+    } else if (this.isInsideRightBoundary(event)) {
+      this.makeRightResizable(event);
+    } else if (this.isInsideBottomBoundary(event)) {
+      this.makeBottomResizable(event);
+    } else if (this.isInsideLeftBoundary(event)) {
+      this.makeLeftResizable(event);
+    }
+  }
+
+  private makeTopResizable(event) {
+    this.topIsResizable = true;
+    this.mouseYOnStart = event.clientY;
+    this.elemTopOnStart = this.ne.getBoundingClientRect().top;
+    this.elemHeightOnStart = this.ne.offsetHeight;
+  }
+
+  private makeRightResizable(event) {
+    this.rightIsResizable = true;
+    this.mouseXOnStart = event.clientX;
+    this.elemWidthOnStart = this.ne.offsetWidth;
+  }
+
+  private makeBottomResizable(event) {
+    this.bottomIsResizable = true;
+    this.mouseYOnStart = event.clientY;
+    this.elemHeightOnStart = this.ne.offsetHeight;
+  }
+
+  private makeLeftResizable(event) {
+    this.leftIsResizable = true;
+    this.mouseXOnStart = event.clientX;
+    this.elemLeftOnStart = this.ne.getBoundingClientRect().left;
+    this.elemWidthOnStart = this.ne.offsetWidth;
+  }
+
+  private resizeTop(event): string {
+    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart) + 'px';
+    const currentHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart) + 'px';
+    this.renderer.setStyle(this.ne, 'top', currentTop);
+    this.renderer.setStyle(this.ne, 'height', currentHeight);
+    return currentHeight;
+  }
+
+  private resizeRight(event): string {
+    const currentWidth = this.elemWidthOnStart + (event.clientX - this.mouseXOnStart) + 'px';
+    this.renderer.setStyle(this.ne, 'width', currentWidth);
+    return currentWidth;
+  }
+
+  private resizeBottom(event): string {
+    const currentHeight = this.elemHeightOnStart + (event.clientY - this.mouseYOnStart) + 'px';
+    this.renderer.setStyle(this.ne, 'height', currentHeight);
+    return currentHeight;
+  }
+
+  private resizeLeft(event): string {
+    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart) + 'px';
+    const currentWidth = this.elemWidthOnStart - (event.clientX - this.mouseXOnStart) + 'px';
+    this.renderer.setStyle(this.ne, 'left', currentLeft);
+    this.renderer.setStyle(this.ne, 'width', currentWidth);
+    return currentWidth;
+  }
+
+  private setResizeCursors(event) {
     if (this.isInsideTopRightBoundary(event)) {
       this.renderer.setStyle(this.ne, 'cursor', 'nesw-resize');
     } else if (this.isInsideBottomRightBoundary(event)) {
@@ -34,24 +152,20 @@ export class ResizableDirective implements OnInit {
       this.renderer.setStyle(this.ne, 'cursor', 'nesw-resize');
     } else if (this.isInsideTopLeftBoundary(event)) {
       this.renderer.setStyle(this.ne, 'cursor', 'nwse-resize');
-    } else if (this.isInsideTopBottomBoundaries(event)) {
+    } else if (this.isInsideTopOrBottomBoundary(event)) {
       this.renderer.setStyle(this.ne, 'cursor', 'row-resize');
-    } else if (this.isInsideLeftRightBoundaries(event)) {
+    } else if (this.isInsideLeftOrRightBoundary(event)) {
       this.renderer.setStyle(this.ne, 'cursor', 'col-resize');
     } else {
       this.renderer.removeStyle(this.ne, 'cursor');
     }
   }
 
-  private isInsideResizeBoundaries(event) {
-    return this.isInsideLeftRightBoundaries(event) || this.isInsideTopBottomBoundaries(event);
-  }
-
-  private isInsideTopBottomBoundaries(event) {
+  private isInsideTopOrBottomBoundary(event) {
     return this.isInsideTopBoundary(event) || this.isInsideBottomBoundary(event);
   }
 
-  private isInsideLeftRightBoundaries(event) {
+  private isInsideLeftOrRightBoundary(event) {
     return this.isInsideLeftBoundary(event) || this.isInsideRightBoundary(event);
   }
 
