@@ -13,6 +13,7 @@ export class ResizableDirective implements OnInit {
   @Output() left = new EventEmitter<number>();
   @Output() top = new EventEmitter<number>();
   @Output() resizing = new EventEmitter<boolean>();
+  @Output() dragging = new EventEmitter<boolean>();
 
   private ne: any;
   private boundarySize = 8;
@@ -23,6 +24,7 @@ export class ResizableDirective implements OnInit {
   private rightIsResizable = false;
   private bottomIsResizable = false;
   private leftIsResizable = false;
+  private isDraggable = false;
   private mouseXOnStart: number;
   private mouseYOnStart: number;
   private elemTopOnStart: number;
@@ -35,16 +37,19 @@ export class ResizableDirective implements OnInit {
   }
 
   ngOnInit() {
-    this.renderer.setStyle(this.ne, 'height', '50px');
-    this.renderer.setStyle(this.ne, 'width', '30%');
     this.width.next(this.ne.offsetWidth);
     this.height.next(this.ne.offsetHeight);
+    this.top.next(this.ne.getBoundingClientRect().top);
+    this.left.next(this.ne.getBoundingClientRect().left);
+    this.resizing.next(false);
+    this.dragging.next(false);
     this.createOverlay();
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event) {
     this.setResizeCursors(event);
+    this.setDragCursor(event);
     if (this.topIsResizable) {
       const currentHeight = this.resizeTop(event);
       this.height.next(currentHeight);
@@ -61,6 +66,11 @@ export class ResizableDirective implements OnInit {
       const currentWidth = this.resizeLeft(event);
       this.width.next(currentWidth);
     }
+    if (this.isDraggable) {
+      const [currentLeft, currentTop] = this.dragElement(event);
+      this.left.next(currentLeft);
+      this.top.next(currentTop);
+    }
   }
 
   @HostListener('mousedown', ['$event'])
@@ -70,19 +80,24 @@ export class ResizableDirective implements OnInit {
       this.makeElementTransparent();
       this.enableOverlay();
       this.resizing.emit(true);
+    } else if (this.isInsideDragArea(event)) {
+      this.makeDraggable(event);
     }
   }
 
   @HostListener('mouseup')
   onMouseUp() {
     this.makeElementOpaque();
-    this.disableOverlay();
-    this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
+    if (this.topIsResizable || this.rightIsResizable || this.bottomIsResizable || this.leftIsResizable) {
+      this.disableOverlay();
+      this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
+    }
+    this.isDraggable = false;
     this.resizing.emit(false);
   }
 
   private makeElementTransparent() {
-      this.renderer.setStyle(this.ne, 'opacity', 0.5);
+    this.renderer.setStyle(this.ne, 'opacity', 0.5);
   }
 
   private makeElementOpaque() {
@@ -108,6 +123,12 @@ export class ResizableDirective implements OnInit {
 
   private disableOverlay() {
     this.renderer.removeChild(this.ne, this.overlay);
+  }
+
+  private makeDraggable(event) {
+    this.isDraggable = true;
+    this.elemTopOnStart = this.ne.getBoundingClientRect().top;
+    this.elemLeftOnStart = this.ne.getBoundingClientRect().left;
   }
 
   private setResizeMode(event) {
@@ -196,6 +217,20 @@ export class ResizableDirective implements OnInit {
     return currentWidth;
   }
 
+  private dragElement(event): [number, number] {
+    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
+    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
+    this.renderer.setStyle(this.ne, 'left', currentLeft + 'px');
+    this.renderer.setStyle(this.ne, 'top', currentTop + 'px');
+    return [currentLeft, currentTop];
+  }
+
+  private setDragCursor(event) {
+    if (this.isInsideDragArea(event)) {
+      this.renderer.setStyle(this.ne, 'cursor', 'move');
+    }
+  }
+
   private setResizeCursors(event) {
     if (this.isInsideTopRightBoundary(event)) {
       this.renderer.setStyle(this.ne, 'cursor', 'nesw-resize');
@@ -212,6 +247,10 @@ export class ResizableDirective implements OnInit {
     } else {
       this.renderer.removeStyle(this.ne, 'cursor');
     }
+  }
+
+  private isInsideDragArea(event): boolean {
+    return !this.isInsideBoundary(event);
   }
 
   private isInsideBoundary(event) {
