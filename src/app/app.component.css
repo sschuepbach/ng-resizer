@@ -1,6 +1,13 @@
 .adiv {
   position: absolute;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   background-color: red;
   border: 1px black solid;
   box-sizing: border-box;
+}
+
+.adiv * {
+  user-select: none;
 }

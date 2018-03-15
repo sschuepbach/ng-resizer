@@ -12,6 +12,8 @@ export class ResizableDirective implements OnInit {
   private ne: any;
   private boundarySize = 8;
 
+  private overlay: any;
+
   private topIsResizable = false;
   private rightIsResizable = false;
   private bottomIsResizable = false;
@@ -32,6 +34,7 @@ export class ResizableDirective implements OnInit {
     this.renderer.setStyle(this.ne, 'width', '30%');
     this.width.next(this.ne.offsetWidth + 'px');
     this.height.next(this.ne.offsetHeight + 'px');
+    this.createOverlay();
   }
 
   @HostListener('mousemove', ['$event'])
@@ -58,11 +61,45 @@ export class ResizableDirective implements OnInit {
   @HostListener('mousedown', ['$event'])
   onMouseDown(event) {
     this.setResizeMode(event);
+    if (this.isInsideBoundary(event)) {
+      this.makeElementTransparent();
+      this.enableOverlay();
+    }
   }
 
   @HostListener('mouseup')
   onMouseUp() {
+    this.makeElementOpaque();
+    this.disableOverlay();
     this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
+  }
+
+  private makeElementTransparent() {
+      this.renderer.setStyle(this.ne, 'opacity', 0.5);
+  }
+
+  private makeElementOpaque() {
+    this.renderer.removeStyle(this.ne, 'opacity');
+  }
+
+  private createOverlay() {
+    this.overlay = this.renderer.createElement('div');
+    this.renderer.setStyle(this.overlay, 'position', 'fixed');
+    this.renderer.setStyle(this.overlay, 'padding', 0);
+    this.renderer.setStyle(this.overlay, 'margin', 0);
+    this.renderer.setStyle(this.overlay, 'top', 0);
+    this.renderer.setStyle(this.overlay, 'left', 0);
+    this.renderer.setStyle(this.overlay, 'width', '100%');
+    this.renderer.setStyle(this.overlay, 'height', '100%');
+    this.renderer.setStyle(this.overlay, 'background', 'rgba(0,0,0,0)');
+  }
+
+  private enableOverlay() {
+    this.renderer.appendChild(this.ne, this.overlay);
+  }
+
+  private disableOverlay() {
+    this.renderer.removeChild(this.ne, this.overlay);
   }
 
   private setResizeMode(event) {
@@ -159,6 +196,10 @@ export class ResizableDirective implements OnInit {
     } else {
       this.renderer.removeStyle(this.ne, 'cursor');
     }
+  }
+
+  private isInsideBoundary(event) {
+    return this.isInsideTopOrBottomBoundary(event) || this.isInsideLeftOrRightBoundary(event);
   }
 
   private isInsideTopOrBottomBoundary(event) {
