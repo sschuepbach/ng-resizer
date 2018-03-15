@@ -94,6 +94,7 @@ export class ResizableDirective implements OnInit {
     this.renderer.setStyle(this.overlay, 'position', 'fixed');
     this.renderer.setStyle(this.overlay, 'padding', 0);
     this.renderer.setStyle(this.overlay, 'margin', 0);
+    this.renderer.setStyle(this.overlay, 'border', 0);
     this.renderer.setStyle(this.overlay, 'top', 0);
     this.renderer.setStyle(this.overlay, 'left', 0);
     this.renderer.setStyle(this.overlay, 'width', '100%');
