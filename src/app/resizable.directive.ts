@@ -1,4 +1,4 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, Renderer2 } from '@angular/core';
+import {Directive, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, Renderer2} from '@angular/core';
 
 @Directive({selector: '[appResizable]'})
 export class ResizableDirective implements OnInit {
@@ -76,24 +76,19 @@ export class ResizableDirective implements OnInit {
   @HostListener('mousedown', ['$event'])
   onMouseDown(event) {
     this.setResizeMode(event);
-    if (this.isInsideBoundary(event)) {
-      this.makeElementTransparent();
-      this.enableOverlay();
-      this.resizing.emit(true);
-    } else if (this.isInsideDragArea(event)) {
-      this.makeDraggable(event);
-    }
+    this.setDragMode(event);
+    this.makeElementTransparent();
+    this.enableOverlay();
   }
 
   @HostListener('mouseup')
   onMouseUp() {
     this.makeElementOpaque();
-    if (this.topIsResizable || this.rightIsResizable || this.bottomIsResizable || this.leftIsResizable) {
-      this.disableOverlay();
-      this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
-    }
+    this.disableOverlay();
+    this.topIsResizable = this.rightIsResizable = this.bottomIsResizable = this.leftIsResizable = false;
     this.isDraggable = false;
     this.resizing.emit(false);
+    this.dragging.emit(false);
   }
 
   private makeElementTransparent() {
@@ -129,9 +124,21 @@ export class ResizableDirective implements OnInit {
     this.isDraggable = true;
     this.elemTopOnStart = this.ne.getBoundingClientRect().top;
     this.elemLeftOnStart = this.ne.getBoundingClientRect().left;
+    this.mouseXOnStart = event.clientX;
+    this.mouseYOnStart = event.clientY;
+  }
+
+  private setDragMode(event) {
+    if (this.isInsideDragArea(event)) {
+      this.dragging.emit(true);
+      this.makeDraggable(event);
+    }
   }
 
   private setResizeMode(event) {
+    if (this.isInsideBoundary(event)) {
+      this.resizing.emit(true);
+    }
     if (this.isInsideTopRightBoundary(event)) {
       this.makeTopResizable(event);
       this.makeRightResizable(event);

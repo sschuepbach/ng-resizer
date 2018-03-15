@@ -1,4 +1,5 @@
 <div appResizable (width)="setHeight($event)" (height)="setWidth($event)" (top)="setTop($event)"
      (left)="setLeft($event)" (resizing)="setResizing($event)" (dragging)="setDragging($event)">
-  <p *ngIf="resizing">{{width}} / {{height}}</p>
+  <p *ngIf="resizing">w: {{width}} / h: {{height}}</p>
+  <p *ngIf="dragging">x: {{left}} / y: {{top}}</p>
 </div>
