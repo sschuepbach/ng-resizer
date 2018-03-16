@@ -1,16 +1,21 @@
-div {
+div.container {
   position: absolute;
   height: 200px;
   width: 200px;
-  left: 50px;
-  top: 50px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  left: 100px;
+  top: 100px;
   background-color: #9addff;
   border: 3px #c8c8c8 solid;
-  border-radius:5px;
+  border-radius: 5px;
   box-sizing: border-box;
+}
+
+div.content {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 div * {

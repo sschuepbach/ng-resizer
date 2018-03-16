@@ -7,6 +7,11 @@ export class ResizableDirective implements OnInit {
   @Input() resizableOnRight = true;
   @Input() resizableOnTop = true;
   @Input() resizableOnBottom = true;
+  @Input() topOuterBoundary;
+  @Input() rightOuterBoundary;
+  @Input() bottomOuterBoundary;
+  @Input() leftOuterBoundary;
+  @Input() boundarySize = 8;
 
   @Output() width = new EventEmitter<number>();
   @Output() height = new EventEmitter<number>();
@@ -16,7 +21,6 @@ export class ResizableDirective implements OnInit {
   @Output() dragging = new EventEmitter<boolean>();
 
   private ne: any;
-  private boundarySize = 8;
 
   private overlay: any;
 
@@ -202,10 +206,15 @@ export class ResizableDirective implements OnInit {
   }
 
   private resizeTop(event): number {
-    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
-    const tempHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart);
-    const currentHeight = tempHeight > 0 ? tempHeight : 0;
-    if (tempHeight >= 0) {
+   let currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
+    let currentHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart);
+
+    currentHeight = currentHeight > 0 ? currentHeight : 0;
+    if (this.rightOuterBoundary && currentTop < this.topOuterBoundary) {
+      currentTop = this.topOuterBoundary;
+      currentHeight = this.ne.getBoundingClientRect().bottom - this.topOuterBoundary;
+    }
+    if (currentHeight >= 0) {
       this.renderer.setStyle(this.ne, 'top', currentTop + 'px');
     }
     this.renderer.setStyle(this.ne, 'height', currentHeight + 'px');
@@ -213,24 +222,32 @@ export class ResizableDirective implements OnInit {
   }
 
   private resizeRight(event): number {
-    const tempWidth = this.elemWidthOnStart + (event.clientX - this.mouseXOnStart);
-    const currentWidth = tempWidth > 0 ? tempWidth : 0;
+    let currentWidth = this.elemWidthOnStart + (event.clientX - this.mouseXOnStart);
+    currentWidth = currentWidth > 0 ? currentWidth : 0;
+    currentWidth = (this.rightOuterBoundary && (this.ne.getBoundingClientRect().left + currentWidth) > this.rightOuterBoundary) ?
+      this.rightOuterBoundary - this.ne.getBoundingClientRect().left : currentWidth;
     this.renderer.setStyle(this.ne, 'width', currentWidth + 'px');
     return currentWidth;
   }
 
   private resizeBottom(event): number {
-    const tempHeight = this.elemHeightOnStart + (event.clientY - this.mouseYOnStart);
-    const currentHeight = tempHeight > 0 ? tempHeight : 0;
+    let currentHeight = this.elemHeightOnStart + (event.clientY - this.mouseYOnStart);
+    currentHeight = currentHeight > 0 ? currentHeight : 0;
+    currentHeight = (this.bottomOuterBoundary && (this.ne.getBoundingClientRect().top + currentHeight) > this.bottomOuterBoundary) ?
+      this.bottomOuterBoundary - this.ne.getBoundingClientRect().top : currentHeight;
     this.renderer.setStyle(this.ne, 'height', currentHeight + 'px');
     return currentHeight;
   }
 
   private resizeLeft(event): number {
-    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
-    const tempWidth = this.elemWidthOnStart - (event.clientX - this.mouseXOnStart);
-    const currentWidth = tempWidth > 0 ? tempWidth : 0;
-    if (tempWidth >= 0) {
+    let currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
+    let currentWidth = this.elemWidthOnStart - (event.clientX - this.mouseXOnStart);
+    currentWidth = currentWidth > 0 ? currentWidth : 0;
+    if (this.leftOuterBoundary && currentLeft < this.leftOuterBoundary) {
+      currentLeft = this.leftOuterBoundary;
+      currentWidth = this.ne.getBoundingClientRect().right - this.leftOuterBoundary;
+    }
+    if (currentWidth >= 0) {
       this.renderer.setStyle(this.ne, 'left', currentLeft + 'px');
     }
     this.renderer.setStyle(this.ne, 'width', currentWidth + 'px');
@@ -238,11 +255,37 @@ export class ResizableDirective implements OnInit {
   }
 
   private dragElement(event): [number, number] {
-    const currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
-    const currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
+    let currentLeft = this.elemLeftOnStart + (event.clientX - this.mouseXOnStart);
+    let currentTop = this.elemTopOnStart + (event.clientY - this.mouseYOnStart);
+    [currentLeft, currentTop] =
+      this.keepElementInBoundariesWhileDragging(currentLeft, currentTop, this.ne.offsetWidth, this.ne.offsetHeight);
     this.renderer.setStyle(this.ne, 'left', currentLeft + 'px');
     this.renderer.setStyle(this.ne, 'top', currentTop + 'px');
     return [currentLeft, currentTop];
+  }
+
+  private keepElementInBoundariesWhileDragging(left: number, top: number, width: number, height: number): [number, number] {
+
+    let finalLeft = left;
+    let finalTop = top;
+
+    if (this.rightOuterBoundary && (left + width) > this.rightOuterBoundary) {
+      finalLeft = this.rightOuterBoundary - width;
+    }
+
+    if (this.bottomOuterBoundary && (top + height) > this.bottomOuterBoundary) {
+      finalTop = this.bottomOuterBoundary - height;
+    }
+
+    if (this.leftOuterBoundary && left < this.leftOuterBoundary) {
+      finalLeft = this.leftOuterBoundary;
+    }
+
+    if (this.topOuterBoundary && top < this.topOuterBoundary) {
+      finalTop = this.topOuterBoundary;
+    }
+
+    return [finalLeft, finalTop];
   }
 
   private setDragCursor(event) {

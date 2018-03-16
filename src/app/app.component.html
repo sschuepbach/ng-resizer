@@ -1,5 +1,8 @@
-<div appResizable (width)="setHeight($event)" (height)="setWidth($event)" (top)="setTop($event)"
-     (left)="setLeft($event)" (resizing)="setResizing($event)" (dragging)="setDragging($event)">
-  <p *ngIf="resizing">w: {{width}} / h: {{height}}</p>
-  <p *ngIf="dragging">x: {{left}} / y: {{top}}</p>
+<div class="container" appResizable (width)="setHeight($event)" (height)="setWidth($event)" (top)="setTop($event)"
+     (left)="setLeft($event)" (resizing)="setResizing($event)" (dragging)="setDragging($event)"
+[leftOuterBoundary]="100" [bottomOuterBoundary]="500" [topOuterBoundary]="100" [rightOuterBoundary]="500">
+  <div class="content">
+    <p *ngIf="resizing">w: {{width}} / h: {{height}}</p>
+    <p *ngIf="dragging">x: {{left}} / y: {{top}}</p>
+  </div>
 </div>
