@@ -16,8 +16,48 @@ div.content {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 div * {
   user-select: none;
+}
+
+.hrule {
+  position: absolute;
+  height: 0;
+  width: 100%;
+  border: 3px dashed #ccc;
+}
+
+.vrule {
+  position: absolute;
+  width: 0;
+  height: 100vh;
+  border: 3px dashed #ccc;
+}
+
+.bottom {
+  bottom: 0;
+}
+
+.top {
+  top: 0
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+.menu {
+  position: absolute;
+  width: 200px;
+  height: 300px;
+  z-index: 2;
+  right: 3px;
+  top: 3px;
 }
