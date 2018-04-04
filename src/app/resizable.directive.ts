@@ -89,6 +89,8 @@ export class ResizableDirective implements OnInit {
     this.isDraggable = false;
     this.resizing.emit(false);
     this.dragging.emit(false);
+    this.top.next(this.ne.getBoundingClientRect().top);
+    this.left.next(this.ne.getBoundingClientRect().left);
   }
 
   private emitInitialValues() {
@@ -210,7 +212,7 @@ export class ResizableDirective implements OnInit {
     let currentHeight = this.elemHeightOnStart - (event.clientY - this.mouseYOnStart);
 
     currentHeight = currentHeight > 0 ? currentHeight : 0;
-    if (this.rightOuterBoundary && currentTop < this.topOuterBoundary) {
+    if (this.topOuterBoundary && currentTop < this.topOuterBoundary) {
       currentTop = this.topOuterBoundary;
       currentHeight = this.ne.getBoundingClientRect().bottom - this.topOuterBoundary;
     }
